@@ -92,6 +92,19 @@ Before a Google Play release, the production profile must be changed to build an
 
 The configured Android application ID is `com.medicinereminder.app`. Treat this identifier as permanent once the app is published.
 
+## GitHub Actions APK build
+
+The repository includes a manual workflow at [`.github/workflows/build-apk.yml`](./.github/workflows/build-apk.yml). It builds the native Android project on a GitHub-hosted Linux runner without Android Studio or an Expo/EAS token.
+
+To run it:
+
+1. Open the repository's **Actions** tab.
+2. Select **Build Android APK**.
+3. Choose **Run workflow** on the `master` branch.
+4. Open the completed run and download the `MedicineReminder-APK` artifact.
+
+The workflow runs `expo prebuild` and Gradle's `assembleRelease` task, then uploads the APK from `android/app/build/outputs/apk/release/`. It is intended for installable testing. The generated signing configuration is not suitable for a public production release, and the workflow must be tested in GitHub Actions before relying on it for a build.
+
 ## Notification notes
 
 - Android notification permission is requested when scheduling a notification.
