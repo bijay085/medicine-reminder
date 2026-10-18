@@ -1,0 +1,57 @@
+{
+  "expo": {
+    "name": "Medicine Reminder",
+    "slug": "medicine-reminder",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.medicinereminder.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#E6F4FE",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK",
+        "android.permission.SCHEDULE_EXACT_ALARM",
+        "android.permission.USE_EXACT_ALARM",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.POST_NOTIFICATIONS"
+      ],
+      "softwareKeyboardLayoutMode": "resize",
+      "versionCode": 2
+    },
+    "plugins": [
+      "expo-font",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/android-icon-foreground.png",
+          "color": "#5FF5D2",
+          "sounds": [
+            "./assets/sounds/notification.wav"
+          ]
+        }
+      ],
+      "expo-audio",
+      "@react-native-community/datetimepicker",
+      "expo-sharing",
+      "./plugins/withApkName.js"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "965b6a9a-4a97-4018-b3be-877d961fbf26"
+      }
+    }
+  }
+}

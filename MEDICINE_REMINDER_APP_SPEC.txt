@@ -1,0 +1,938 @@
+MEDICINE REMINDER APP - MASTER PROJECT SPEC
+===========================================
+
+Purpose of this file
+--------------------
+This file is the single source of truth for the project.
+
+If development is interrupted, a new Codex/Work session should:
+1. Read this file first.
+2. Inspect the existing project files.
+3. Continue from the current project state.
+4. Do NOT restart the project from scratch unless the existing project is unusable.
+5. Do NOT redesign the app unless this file is explicitly changed.
+6. Keep this file in the project root.
+7. Update the "CURRENT PROGRESS" section when meaningful milestones are completed.
+
+Project goal
+------------
+Build a very small Android-first medicine reminder app.
+
+The app should tell the user:
+- which medicine to take
+- how many tablets/capsules to take
+- when to take it
+- whether it is before food, after food, or at a fixed time
+- how long after/before food the medicine should be taken
+
+The app should NOT become a general health app.
+
+Primary platform
+----------------
+Android.
+
+Preferred stack
+---------------
+- React Native
+- Expo
+- TypeScript
+- Local-only storage
+- No backend
+- No account/login
+- No cloud sync
+
+Use Expo development builds if required for Android notification action buttons.
+
+Main design principle
+---------------------
+The app should work automatically most of the time.
+
+The user should NOT need to manually trigger every medicine event.
+
+The user sets a default routine once, such as:
+- default breakfast time
+- default lunch time
+- default dinner time
+
+Medicine reminders are automatically calculated from those defaults.
+
+If a meal is early or late on a specific day, the user should be able to change only that meal time for that day and the app should recalculate related reminders.
+
+Example:
+
+Default breakfast: 8:00 AM
+Medicine A: 1 tablet, 30 minutes before breakfast
+Medicine B: 2 tablets, 15 minutes after breakfast
+
+Normal day:
+7:30 AM -> Medicine A
+8:00 AM -> Breakfast
+8:15 AM -> Medicine B
+
+If breakfast changes to 9:00 AM for today:
+8:30 AM -> Medicine A
+9:00 AM -> Breakfast
+9:15 AM -> Medicine B
+
+
+CORE FEATURES
+=============
+
+1. Medicine setup
+-----------------
+Each medicine should support:
+
+- Medicine name
+- Optional strength text
+  Example:
+  "500 mg"
+- Amount per dose
+  Examples:
+  0.5 tablet
+  1 tablet
+  2 tablets
+  1 capsule
+  2 capsules
+- Unit
+  Examples:
+  tablet
+  capsule
+- Start date
+- End date
+- Active/inactive state
+
+Timing relation:
+- before breakfast
+- after breakfast
+- before lunch
+- after lunch
+- before dinner
+- after dinner
+- fixed time
+
+Offset:
+- immediately
+- 15 minutes
+- 30 minutes
+- 60 minutes
+- custom number of minutes
+
+Examples:
+- 1 tablet, 30 minutes before breakfast
+- 2 tablets, 15 minutes after dinner
+- 1 capsule at 8:00 PM
+
+The app must NEVER guess medicine dosage from the medicine name.
+
+The user must explicitly enter or confirm:
+- medicine
+- amount
+- schedule
+- meal relation
+- timing offset
+
+This is a reminder app, not a prescribing app.
+
+
+2. Default meal times
+---------------------
+The user sets:
+
+- Breakfast default time
+- Lunch default time
+- Dinner default time
+
+These are default scheduling anchors only.
+
+They are not strict meal times.
+
+The user can change today's meal time without changing the permanent default.
+
+Example:
+Default dinner = 8:00 PM
+
+Today only:
+Dinner = 9:00 PM
+
+Tomorrow should return to the normal default unless the user permanently changes the default.
+
+
+3. Today's timeline
+-------------------
+The main screen should primarily show TODAY.
+
+Example:
+
+7:30 AM
+Esomeprazole
+1 tablet
+30 min before breakfast
+[TAKEN]
+
+8:00 AM
+Breakfast
+
+8:15 AM
+Amoxicillin
+2 tablets
+15 min after breakfast
+
+1:00 PM
+Lunch
+
+7:30 PM
+Esomeprazole
+1 tablet
+30 min before dinner
+
+8:00 PM
+Dinner
+
+8:15 PM
+Amoxicillin
+2 tablets
+15 min after dinner
+
+The timeline should be simple and easy to read.
+
+Do not overload the screen with health data.
+
+
+4. Android notifications
+------------------------
+A medicine notification should contain only useful information.
+
+Example:
+
+Amoxicillin
+Take 2 tablets now
+15 min after dinner
+
+Notification actions:
+
+[TAKEN]    [+15 MIN]
+
+TAKEN behavior:
+- Mark the current dose as completed.
+- Work directly from the Android notification.
+- Do not require opening the app.
+- Dismiss the current notification.
+- Store the completion state locally.
+
++15 MIN behavior:
+- Dismiss the current notification.
+- Schedule the exact same dose reminder 15 minutes later.
+- Do not require opening the app.
+- Keep the dose uncompleted until TAKEN is selected.
+
+The +15 minute action is required in the notification itself.
+
+Do not clutter the notification with many delay buttons.
+
+
+5. Missed / pending dose behavior
+---------------------------------
+Keep this conservative.
+
+Required:
+- A dose can be Pending
+- A dose can be Taken
+- A dose can be Delayed
+
+Do NOT automatically tell the user to double a dose.
+
+Do NOT invent medical instructions for missed doses.
+
+The app's job is only to remind based on the schedule entered by the user.
+
+
+6. Meal delay behavior
+----------------------
+The user should be able to change today's meal time.
+
+Example:
+Breakfast normally = 8:00 AM
+
+Today:
+User changes breakfast to 8:45 AM
+
+All medicine reminders linked to today's breakfast should recalculate.
+
+This should only affect today's schedule unless the user chooses to update the permanent default.
+
+Potential UI:
+- Tap Breakfast
+- Set today's time
+- Save for today
+
+Do not require re-editing each medicine.
+
+
+7. Storage
+----------
+Use local device storage only.
+
+No backend.
+No login.
+No account.
+No cloud database.
+
+Persist:
+- medicines
+- default meal times
+- today's meal overrides
+- medicine schedule settings
+- dose status
+- notification IDs if needed
+
+Preferred local storage:
+- AsyncStorage for simple settings
+or
+- another lightweight local storage solution only if technically required
+
+Do not introduce a database unless the project truly needs one.
+
+
+8. Main screens
+---------------
+Keep the number of screens small.
+
+A. Today
+- Today's medicine timeline
+- Meal times
+- Taken/pending state
+- Ability to change today's meal times
+
+B. Medicines
+- List medicines
+- Add medicine
+- Edit medicine
+- Disable/delete medicine
+
+C. Settings
+- Default breakfast time
+- Default lunch time
+- Default dinner time
+- Notification permission/status if needed
+
+That is enough for v1.
+
+
+9. Add/Edit Medicine UI
+-----------------------
+Fields:
+
+Medicine name
+Strength (optional text)
+Amount
+Unit
+Start date
+End date
+
+Schedule type:
+- Before breakfast
+- After breakfast
+- Before lunch
+- After lunch
+- Before dinner
+- After dinner
+- Fixed time
+
+Offset:
+- Immediate
+- 15 min
+- 30 min
+- 1 hour
+- Custom
+
+If Fixed Time is selected:
+- show exact time field
+- hide meal relation controls that are not needed
+
+
+10. Scope that must NOT be added
+--------------------------------
+Do NOT add:
+
+- symptom tracking
+- water reminders
+- calories
+- exercise tracking
+- health articles
+- medical advice
+- AI
+- OCR
+- prescription scanning
+- automatic dosage interpretation
+- doctor chat
+- social features
+- login
+- user accounts
+- backend
+- cloud sync
+- family accounts
+- ads
+- analytics unless technically required for debugging
+- unnecessary dashboards
+- unnecessary charts
+- unnecessary health metrics
+
+Keep the app focused.
+
+
+TESTING STRATEGY
+================
+
+Goal
+----
+Avoid needing a physical phone during every development step.
+
+The user wants to develop mainly on a laptop.
+
+Use three layers of testing.
+
+
+Layer 1: Logic testing without emulator
+---------------------------------------
+Put scheduling calculations in pure TypeScript functions where possible.
+
+Examples:
+- calculate medicine time from meal time
+- apply meal override
+- calculate before/after offsets
+- calculate +15 minute delay
+- determine today's doses
+- determine active medicines by date
+
+These should be testable directly on the laptop with automated tests.
+
+This allows a large amount of work without opening an Android emulator.
+
+
+Layer 2: UI testing on laptop
+-----------------------------
+If practical with the chosen Expo setup, use a web/browser preview for UI-only work.
+
+Use this for:
+- screen layout
+- forms
+- medicine CRUD
+- timeline rendering
+- meal override UI
+
+Important:
+Browser testing is NOT enough for Android notification behavior.
+
+Do not waste time trying to perfectly emulate Android notifications in a browser.
+
+
+Layer 3: Android emulator
+-------------------------
+Use Android Studio emulator for Android-specific integration tests.
+
+Required emulator tests:
+- notification permission
+- scheduled local notification
+- notification showing correct medicine
+- notification showing correct amount
+- TAKEN action
+- +15 MIN action
+- notification rescheduling
+- meal-time recalculation affecting notifications
+- app restart persistence
+- notification behavior with app backgrounded
+- notification behavior with app closed where supported
+
+The emulator does NOT need to be restarted for every code change.
+
+Normal workflow:
+1. Start emulator once.
+2. Keep emulator running during the development session.
+3. Use hot reload / reload / development build.
+4. Restart emulator only when actually necessary.
+
+For normal UI/logic changes, do not start the emulator if laptop tests/browser preview are enough.
+
+
+REAL PHONE TESTING
+==================
+Do not require physical phone testing during normal development.
+
+After the app is considered complete on laptop/emulator:
+
+1. Build APK.
+2. Install APK on actual Android phone.
+3. Perform one final real-device test.
+
+Final phone test should verify:
+- notifications arrive
+- TAKEN works
+- +15 MIN works
+- app survives normal background use
+- reminders still behave properly under the phone's battery/background restrictions
+
+Do not repeatedly ask the user to test unfinished builds on the phone.
+
+
+ANDROID BUILD
+=============
+
+Final deliverable:
+- Installable Android APK
+
+The agent should:
+1. Build the application.
+2. Fix build errors.
+3. Produce the APK.
+4. Provide the exact APK file path.
+5. Provide only the minimal commands needed for future rebuilds.
+
+Do not stop at:
+- project scaffold
+- source code only
+- "run this yourself"
+- incomplete build instructions
+
+The goal is an actual APK.
+
+
+TECHNICAL DIRECTION
+===================
+
+Recommended packages
+--------------------
+Use the minimum required packages.
+
+Likely:
+- expo
+- react-native
+- TypeScript
+- expo-notifications
+- @react-native-async-storage/async-storage
+
+Add other dependencies only if necessary.
+
+Avoid unnecessary state-management frameworks.
+
+React state/context or a very small store is enough unless complexity proves otherwise.
+
+
+Notification architecture
+-------------------------
+Notification scheduling should have a clear service/module.
+
+Example conceptual structure:
+
+src/
+  components/
+  screens/
+  storage/
+  notifications/
+  scheduling/
+  types/
+
+Possible files:
+
+src/types/medicine.ts
+src/storage/storage.ts
+src/scheduling/calculateDoseTimes.ts
+src/notifications/notificationService.ts
+
+Keep scheduling logic separate from UI.
+
+
+Suggested data model
+--------------------
+
+Medicine:
+
+id
+name
+strength?
+amount
+unit
+startDate
+endDate
+scheduleType
+meal?
+relation?
+offsetMinutes?
+fixedTime?
+enabled
+createdAt
+updatedAt
+
+Example:
+
+{
+  id: "med-1",
+  name: "Amoxicillin",
+  strength: "500 mg",
+  amount: 2,
+  unit: "capsule",
+  startDate: "2026-09-20",
+  endDate: "2026-10-03",
+  scheduleType: "meal",
+  meal: "breakfast",
+  relation: "after",
+  offsetMinutes: 15,
+  enabled: true
+}
+
+Meal defaults:
+
+{
+  breakfast: "08:00",
+  lunch: "13:00",
+  dinner: "20:00"
+}
+
+Today's meal override:
+
+{
+  date: "2026-09-20",
+  breakfast: "09:00"
+}
+
+Dose record:
+
+id
+medicineId
+scheduledAt
+status
+takenAt?
+delayedUntil?
+
+Possible status values:
+- pending
+- taken
+- delayed
+
+
+Scheduling logic
+----------------
+For meal-relative medicine:
+
+before:
+medicineTime = mealTime - offsetMinutes
+
+after:
+medicineTime = mealTime + offsetMinutes
+
+For fixed time:
+medicineTime = selected fixed time
+
+Use local device timezone.
+
+Recalculate future notifications when:
+- medicine added
+- medicine edited
+- medicine disabled/deleted
+- default meal time changed
+- today's meal override changed
+- +15 minute delay selected
+
+
+Notification IDs
+----------------
+Store notification IDs so scheduled reminders can be cancelled/rescheduled correctly.
+
+Avoid duplicate notifications after:
+- app restart
+- medicine edits
+- meal time edits
+
+
+Notification categories/actions
+-------------------------------
+Create Android notification actions for:
+
+TAKEN
+DELAY_15
+
+When action received:
+
+TAKEN:
+- identify dose
+- mark taken
+- cancel related pending notification if needed
+
+DELAY_15:
+- identify dose
+- schedule same dose +15 minutes
+- update local dose record
+
+
+Permissions
+-----------
+Request Android notification permission where required.
+
+If notifications are disabled:
+- show a simple warning in app
+- provide the normal Android path/action to enable them if technically possible
+
+Do not build a complicated permissions tutorial.
+
+
+UX RULES
+========
+
+1. Very little text.
+2. Large, obvious medicine amount.
+3. Today's schedule should be understandable immediately.
+4. Avoid medical jargon.
+5. Do not show unnecessary health information.
+6. Do not force the app to be opened for basic reminder actions.
+7. Normal days should require almost zero user interaction.
+8. Only ask for input when the user's real schedule changes.
+
+
+Example Today screen
+--------------------
+
+TODAY
+
+7:30 AM
+Esomeprazole
+1 tablet
+30 min before breakfast
+Taken
+
+8:00 AM
+Breakfast
+Change today
+
+8:15 AM
+Amoxicillin
+2 capsules
+15 min after breakfast
+Pending
+
+1:00 PM
+Lunch
+Change today
+
+8:00 PM
+Dinner
+Change today
+
+
+Example notification
+--------------------
+
+Amoxicillin
+2 capsules
+Take now
+15 min after dinner
+
+[TAKEN] [+15 MIN]
+
+
+IMPORTANT PRODUCT DECISIONS ALREADY MADE
+========================================
+
+- Mobile is preferred over laptop for actual reminders.
+- Android first.
+- React Native + Expo is preferred.
+- Local-only app.
+- No backend.
+- No login.
+- Notifications are the core feature.
+- Notification must have TAKEN.
+- Notification must have +15 MIN.
+- User should not need to open app for those actions.
+- Meal timing is not perfectly fixed in real life.
+- App still needs default meal times so notifications can happen automatically.
+- Today's meal time can be changed when real life differs.
+- Changing today's meal should recalculate related medicine times.
+- Do not make the user manually start timers for every meal.
+- Do not add unrelated features.
+- User wants laptop-first development.
+- Use automated logic tests and browser/UI preview where useful.
+- Android emulator only when Android-specific behavior needs testing.
+- Keep emulator running instead of restarting it for every change.
+- Final step is APK + one real-phone test.
+
+
+DEVELOPMENT RULES FOR CODEX / WORK
+===================================
+
+When continuing this project:
+
+1. Read this file first.
+2. Inspect the repository.
+3. Determine what is already implemented.
+4. Continue from existing state.
+5. Do not regenerate working files unnecessarily.
+6. Do not change the stack without a concrete technical reason.
+7. Do not expand scope.
+8. Run tests after meaningful changes.
+9. Fix errors instead of leaving TODOs for core features.
+10. Keep the app runnable.
+11. Keep this specification file intact unless the user explicitly changes requirements.
+12. If requirements change, update this file.
+13. Do not repeatedly ask the user questions that this document already answers.
+
+
+EXPECTED DEVELOPMENT ORDER
+==========================
+
+Phase 1
+-------
+- Create Expo TypeScript project
+- Set up project structure
+- Set up local storage
+- Define types/data models
+
+Phase 2
+-------
+- Default meal settings
+- Medicine CRUD
+- Add/edit medicine form
+
+Phase 3
+-------
+- Scheduling engine
+- Today's timeline
+- Meal override logic
+
+Phase 4
+-------
+- Local notification scheduling
+- TAKEN notification action
+- +15 MIN notification action
+
+Phase 5
+-------
+- Persistence
+- Notification rescheduling
+- Duplicate prevention
+- App restart handling
+
+Phase 6
+-------
+- Automated logic tests
+- UI testing on laptop
+- Android emulator integration testing
+
+Phase 7
+-------
+- Build APK
+- Fix release-build issues
+- Provide APK path
+- Provide minimal rebuild commands
+
+Phase 8
+-------
+- One final physical Android phone test
+
+
+ACCEPTANCE CHECKLIST
+====================
+
+App behavior
+------------
+[ ] User can set default breakfast time
+[ ] User can set default lunch time
+[ ] User can set default dinner time
+
+[ ] User can add medicine
+[ ] User can edit medicine
+[ ] User can disable/delete medicine
+
+[ ] Medicine amount supports 0.5 / 1 / 2 etc.
+[ ] Medicine unit supports tablet/capsule
+
+[ ] Medicine can be before breakfast
+[ ] Medicine can be after breakfast
+[ ] Medicine can be before lunch
+[ ] Medicine can be after lunch
+[ ] Medicine can be before dinner
+[ ] Medicine can be after dinner
+[ ] Medicine can use fixed time
+
+[ ] Offset supports immediate
+[ ] Offset supports 15 min
+[ ] Offset supports 30 min
+[ ] Offset supports 1 hour
+[ ] Offset supports custom minutes
+
+[ ] Today's timeline calculates correctly
+[ ] Today's meal time can be overridden
+[ ] Meal override updates related medicine reminders
+
+Notifications
+-------------
+[ ] Android notification appears
+[ ] Correct medicine name appears
+[ ] Correct medicine amount appears
+[ ] Correct meal relation appears
+[ ] TAKEN action appears
+[ ] +15 MIN action appears
+[ ] TAKEN works without opening app
+[ ] +15 MIN works without opening app
+[ ] +15 MIN creates new reminder exactly 15 min later
+
+Persistence
+-----------
+[ ] Medicines survive app restart
+[ ] Meal defaults survive app restart
+[ ] Today's override survives app restart when appropriate
+[ ] Taken status survives app restart
+[ ] App does not create duplicate notifications after restart
+
+Testing
+-------
+[ ] Scheduling logic tested on laptop
+[ ] UI tested without requiring phone
+[ ] Android notifications tested in emulator
+[ ] Emulator does not need restart for every edit
+
+Build
+-----
+[ ] Android release APK builds successfully
+[ ] APK file path provided
+[ ] APK installs on Android phone
+[ ] Final notification test completed on real phone
+
+
+CURRENT PROGRESS
+================
+
+Status:
+Phases 1-3 core implementation complete.
+Android notification integration and APK work remain.
+
+Implementation:
+- Expo SDK 57 + React Native + TypeScript project initialized at the project root.
+- Versioned AsyncStorage persistence implemented for medicines, meal defaults,
+  today's meal overrides, and dose records.
+- Medicine add/edit/enable/disable/delete UI implemented.
+- A medicine can have multiple daily meal-relative or fixed-time reminders.
+- Default breakfast, lunch, and dinner settings implemented.
+- Today's timeline, today-only meal overrides, Taken, and +15 minute dose state
+  implemented in the app UI.
+- Pure TypeScript scheduling engine implemented with automated tests for meal
+  offsets, overrides, date ranges, disabled medicines, and +15 minute delays.
+- Laptop web preview production bundle and interactive persistence flow verified.
+- TypeScript compilation and Expo Doctor checks pass.
+
+Next action for Codex/Work:
+- Implement the Android notification service using expo-notifications.
+- Register TAKEN and +15 MIN notification actions, including background handling.
+- Reconcile scheduled notification IDs after medicine or meal-time changes.
+- Add tests for dose-record transitions and notification planning.
+- Create an Expo development build and verify notification actions in an Android
+  emulator before starting APK release work.
+
+
+RESUME PROMPT
+=============
+
+If opening a new Codex/Work session, use:
+
+"Read MEDICINE_REMINDER_APP_SPEC.txt in the project root first. Treat it as the source of truth. Inspect the existing project and continue from the current state. Do not restart completed work. Implement and test the next incomplete items in the acceptance checklist. Keep scope exactly within the spec."
+
+
+END OF SPEC
+===========
